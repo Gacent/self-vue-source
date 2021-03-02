@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="root">
+    <div>
+      <p>{{name}}--{{message}}</p>
+      <p>{{message}}</p>
+      <p>{{name}}</p>
+    </div>
+  </div>
+
+  <script>
+    // 正则，查找{{}}
+    let regKuo=/\{\{(.+?)\}\}/g;
+    // 1. 获取模板
+    let tmpNode=document.querySelector('#root')
+    // 2. 拿到数据
+    let data={
+      name:'aa',
+      message:'bb'
+    }
+    // 3. 将数据放到模板中
+    // 一般使用递归，vue源码中的template  DOM=>字符串模板=>抽象语法树=>VNode=>真正的DOM
+    // 这里的template是DOM元素
+    function compiler(template,data){
+      let childrenNodes=template.childNodes
+      for(let i=0;i<childrenNodes.length;i++){
+        let type= childrenNodes[i].nodeType // 1. 节点类型 3. 文本类型
+        if(type===1){
+          // 节点类型，递归查找是否有子节点
+          compiler(childrenNodes[i],data)
+        } else if(type===3){
+          // 文本节点，判断是否有{{}}，并赋值
+          let txt=childrenNodes[i].nodeValue
+          txt=txt.replace(regKuo,function (_,g1) {
+            // 第一个参数标识匹配到的，第二个参数标识捕获的分组
+            return value=data[g1.trim()]
+          })
+
+          childrenNodes[i].nodeValue=txt
+        }
+      }
+    }
+    
+    // 此时没有生成新的template，DOM是引用类型，页面上看到的是更新的数据
+    // 缺点：模板没了，以后name修改时候做响应式的时候就不知道是哪个了
+    // console.log(tmpNode)
+    // compiler(tmpNode,data)
+    // console.log(tmpNode)
+    let generateNode=tmpNode.cloneNode(true)  // 克隆节点及后代，及属性，false则不克隆属性
+    compiler(generateNode,data)
+    root.parentNode.replaceChild(generateNode,root)
+    
+
+    // 问题：
+    // 1. vue使用的是虚拟DOM，我们这里使用真实DOM
+    // 2. 只考虑了单属性({{name}})，vue中是使用层级({{child.name.a}})
+    // 3. 代码没有整合，（如：构造函数方式）
+  </script>
+</body>
+</html>

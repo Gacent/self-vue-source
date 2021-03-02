@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    let b={
+      name:'1',
+      age:12,
+      obj:{
+        name:2,
+        age:22,
+        obj2:{
+          name:23,
+          age:1212
+        },
+        ary:[{gender:1}]
+      }
+    }
+    let ARRAY_METHODS=[
+      'push',
+      'pop',
+      'sort',
+      'shift',
+      'unshift',
+      'reverse',
+      'splice'
+    ]
+    let array_methods=Object.create(Array.prototype)
+    ARRAY_METHODS.forEach((method)=>{
+      array_methods[method]=function(){
+        console.log('调用拦截的方法'+method)
+        // 将数据进行响应式化
+        reactify(arguments)
+
+        let res=Array.prototype[method].apply(this,arguments)
+        return res
+      }
+    })
+
+    function defineReactive(target,key,value,enumerable){
+      if(typeof value === 'object'&&value!=null&&!Array.isArray(value)){
+        // 非数组的引用类型
+        reactify(value)
+      }
+      // 利用value作为中间变量
+      Object.defineProperty(target,key,{
+        configurable:true,
+        enumerable:!!enumerable,
+        set(newVal){
+          console.log('设置成'+newVal)
+          value=newVal
+        },
+        get(){
+          console.log('get')
+          return value
+        }
+      })
+    }
+    // 将对象变为响应式
+    function reactify(o){
+      let keys=Object.keys(o)
+      for(let i = 0;i<keys.length;i++){
+        let key=keys[i]// 属性名
+        let value=o[key]
+        if(Array.isArray(value)){
+          // 数组
+          value.__proto__=array_methods
+          for(let i=0;i<value.length;i++){
+            reactify(value[i])
+          }
+        } else {
+          // 对象或值类型
+          defineReactive(o,key,value,true)
+        }
+      }
+    }
+    reactify(b)
+  </script>
+</body>
+</html>

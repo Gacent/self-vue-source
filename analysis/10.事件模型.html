@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    // 全局event对象，提供on，off，emit方法
+    var event=(function(){
+      var eventObjs={}
+      return {
+        // 注册事件，可以连续注册，可以注册多个事件
+        on:function(type,handler){
+          (eventObjs[type]||(eventObjs[type]=[])).push(handler)
+        },
+        // 移除事件
+        // - 不传参数表示移除所有
+        // - 传一个参数表示移除此类型下的所有事件
+        // - 传两个参数表示移除此类型下的特定事件
+        off:function(type,handler){
+          let agm=arguments.length
+          if(agm===0){
+            eventObjs={}
+          } else if(agm===1){
+            eventObjs[type]={}
+          } else if(agm===2){
+            let _events=eventObjs[type]
+            if(!_events) return 
+            for(let i=_events.length-1;i>=0;i--){
+              if(_events[i]===handler){
+                _events.splice(i,1)
+              }
+            }
+          }
+        },
+        // 发射事件，触发事件，传递给事件处理函数
+        emit:function(type){
+          let args=Array.prototype.slice.call(arguments,1)
+          let _events=eventObjs[type]
+          if(!_events) return 
+          for (let index = 0; index < _events.length; index++) {
+            _events[index].apply(null,args);
+          }
+        }
+      }
+    }())
+  </script>
+</body>
+</html>

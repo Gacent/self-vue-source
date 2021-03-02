@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="root">
+    <div>{{name}}</div>
+    <div>{{age}}</div>
+    <ul>
+      <li>name</li>
+      <li>iaaa</li>
+      <li>iaaa</li>
+    </ul>
+  </div>
+  <script>
+    // ----------------------------------------------
+    let ARRAY_METHODS=[
+      'push',
+      'pop',
+      'sort',
+      'shift',
+      'unshift',
+      'reverse',
+      'splice'
+    ]
+    let array_methods=Object.create(Array.prototype)
+    ARRAY_METHODS.forEach((method)=>{
+      array_methods[method]=function(){
+        console.log('调用拦截的方法'+method)
+        // 将数据进行响应式化
+        reactify(arguments)
+
+        let res=Array.prototype[method].apply(this,arguments)
+        return res
+      }
+    })
+    function defineReactive(target,key,value,enumerable){
+      let that=this
+      if(typeof value === 'object'&&value!=null&&!Array.isArray(value)){
+        // 非数组的引用类型
+        reactify(value,that)
+      }
+      // 利用value作为中间变量
+      Object.defineProperty(target,key,{
+        configurable:true,
+        enumerable:!!enumerable,
+        set(newVal){
+          console.log('设置成'+newVal)
+          value=newVal
+          reactify(newVal)
+          // 更新DOM，折中的方式
+          that.mountComponent()
+        },
+        get(){
+          console.log('get '+key)
+          return value
+        }
+      })
+    }
+    // 将对象变为响应式
+    function reactify(o,vm){
+      let keys=Object.keys(o)
+      for(let i = 0;i<keys.length;i++){
+        let key=keys[i]// 属性名
+        let value=o[key]
+        if(Array.isArray(value)){
+          // 数组
+          value.__proto__=array_methods
+          for(let i=0;i<value.length;i++){
+            reactify(value[i],vm)
+          }
+        }
+        defineReactive.call(vm,o,key,value,true)
+      }
+    }
+   
+    // ----------------------------------------------
+    class VNode{
+      constructor(tag,data,value,type){
+        this.tag=tag&&tag.toLowerCase() // 文本节点不能调用toLowerCase
+        this.data=data
+        this.value=value
+        this.type=type
+        this.children=[]
+      }
+      appendChild(vnode){
+        this.children.push(vnode)
+      }
+    }
+    // 生成带坑的VNode，当作compiler函数
+    function getVNode(node) {
+      let nodeType=node.nodeType
+      let _vnode=null
+      if(nodeType===1){
+        //  元素节点
+        let nodeName=node.nodeName
+        let attrs=node.attributes
+        let _attrObj={}
+        for(let i=0;i<attrs.length;i++){
+          // attrs[i] 属性节点 nodeType===2
+          _attrObj[attrs[i].nodeName]=attrs[i].nodeValue
+        }
+        
+        _vnode=new VNode(nodeName,_attrObj,undefined,nodeType)
+        // 考虑子元素
+        let childNodes=node.childNodes
+        for(let i=0;i<childNodes.length;i++){
+          _vnode.appendChild(getVNode(childNodes[i])) // 递归
+        }
+      } else if(nodeType===3){
+        //  文本节点
+        _vnode=new VNode(undefined,undefined,node.nodeValue,nodeType)
+      }
+      return _vnode
+    }
+    //  创建真实DOM
+    function parseVNode(vnode){
+      let type=vnode.type
+      let _node=null
+      if(type===3){
+        return document.createTextNode(vnode.value)
+      } else if(type===1){
+        _node=document.createElement(vnode.tag)
+        // 属性
+        let data=vnode.data
+        Object.keys(data).forEach((key)=>{
+          let attrName=key
+          let attrValue=data[key]
+          _node.setAttribute(attrName,attrValue)
+        })
+        // 子元素
+        let childNodes=vnode.children
+        for(let i=0;i<childNodes.length;i++){
+          _node.appendChild(parseVNode(childNodes[i]))
+        }
+      }
+      return _node
+    }
+    // 值路径
+    function getValueByPath(obj,path){
+      let paths=path.split('.')
+      let res=obj
+      let prop
+      while(prop=paths.shift()){
+        res=res[prop]
+      }
+      return res
+    }
+    let rkuohao=/\{\{(.+?)\}\}/g
+    // 生成填充数据之后的Vnode，模拟AST -> Vnode
+    function combine(vnode,data){
+      let {data:_data,tag:_tag,value:_value,type:_type,children:_children}=vnode
+      let _vnode=null
+      if(_type===1){
+        _vnode=new VNode(_tag,_data,_value,_type)
+        _children.forEach(_subvnode => {
+          _vnode.appendChild(combine(_subvnode,data))
+        });
+      } else if(_type===3){
+        _value=_value.replace(rkuohao,function(_,g){
+          return getValueByPath(data,g.trim())
+        })
+        _vnode=new VNode(_tag,_data,_value,_type)
+      }
+      return _vnode
+    }
+
+    // ----------------------------------------------
+    function SVue(options){
+      this._data=options.data
+      let elm=document.querySelector(options.el) // 在vue中是字符串，这里是DOM（简化）
+      this._template=elm;
+      this._parent=elm.parentNode
+      this.initData()
+
+      // 挂载
+      this.mount()
+    }
+    SVue.prototype.mount = function(){
+      // 提供一个render方法：生成虚拟DOM
+      this.render=this.createRenderFn()
+      this.mountComponent()
+    }
+    SVue.prototype.mountComponent=function(){
+      let mount=()=>{
+        this.update(this.render())
+      }
+      mount.call(this) // 本质上要交给watcher调用
+    }
+    SVue.prototype.initData=function(){
+      // 响应式化
+      reactify(this._data,this)
+      // 代理,this._data[keys[i]]映射到this.keys[i]
+      let keys=Object.keys(this._data)
+      for (let index = 0; index < keys.length; index++) {
+        const key = keys[index];
+        proxy(this,'_data',key)
+      }
+    }
+    function proxy(target,prop,key){
+      Object.defineProperty(target,key,{
+        enumerable:true,
+        configurable:true,
+        get(){
+          console.log('proxy ',key)
+          return target[prop][key]
+        },
+        set(newVal){
+          console.log('proxy set ',key)
+          target[prop][key]=newVal
+        }
+      })
+    }
+    /**
+     * vue源码中使用二次提交的设计结构
+     * 引申事务：
+     * - A转账1000到B：A-1000 ，停电，B没+1000，而A少了1000
+     * - 二次提交：操作-》内存中（第一次）-》一次性真实操作（第二次）
+     * 
+     * vue代码中：
+     * - 在页面中，DOM和虚拟DOM是一一对应的关系（也是为什么不能用新VNode替换旧VNode）
+     * - 每次数据改变的时候都会生成一个新的VNode（新数据VNode）
+     * - 然后这个新的vnode和旧的vnode进行diff算法，更新update vnode，进而更新真实DOM
+     * **/
+    // 这里是生成render函数，目的是缓存 抽象语法树（使用虚拟DOM模拟）
+    SVue.prototype.createRenderFn=function(){
+      let ast=getVNode(this._template)  // 旧的VNode
+      // Vue:AST+data=>Vnode
+      // 我们:带坑的VNOde+data=>含有数据的新的VNode
+      return function render(){
+        let tmp= combine(ast,this._data)
+        return tmp
+      }
+    }
+    // 将虚拟DOM渲染到页面中，diff算法就在这里
+    SVue.prototype.update=function(vnode){
+      // 父元素.replaceChild(新元素，旧元素)
+      let realDOM=parseVNode(vnode)
+      this._parent.replaceChild(realDOM,document.querySelector('#root'))
+    }
+    
+    let app=new SVue({
+      el:'#root',
+      data:{
+        name:'zhangshan',
+        age:19,
+        ary:[{name:'a'}],
+        obj:{
+          a:1,
+          b:2,
+          c:{
+            a:1
+          }
+        }
+      }
+    })
+  </script>
+</body>
+</html>

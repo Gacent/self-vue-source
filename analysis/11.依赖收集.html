@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="root">
+    <div>
+      <comp-1></comp-1>
+    </div>
+    <div>
+      <comp-2></comp-2>
+    </div>
+    <div>{{topName}}</div>
+    <div>{{topOther}}</div>
+    <button @click="fn">按钮</button>
+  </div>
+  <script src="../node_modules/vue/dist/vue-demo.js"></script>
+  <script>
+    Vue.component('comp-1',{
+      template:`
+        <div>
+          <p>{{neiName}}</p> 
+          <p>{{com}}</p>
+          <button @click="btn">按钮</button></div>
+      `,
+      data(){
+        return {
+          neiName:'nei neiName',
+          com:'com'
+        }
+      },
+      methods:{
+        btn(){
+          this.neiName=Math.random()
+        }
+      }
+    })
+    Vue.component('comp-2',{
+      template:`
+        <div>
+          <p>{{nei2Name}}</p> 
+          </div>
+      `,
+      data(){
+        return {
+          nei2Name:'nei nei2Name',
+        }
+      },
+    })
+    let app= new Vue({
+      el:'#root',
+      data:{
+        topName:'topName',
+        topOther:'topOther'
+      },
+      methods:{
+        fn(){
+          this.topName=Math.random()
+        }
+      }
+    })
+  </script>
+</body>
+</html>

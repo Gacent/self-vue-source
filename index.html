@@ -8,14 +8,31 @@
   <script src="./node_modules/vue/dist/vue.js"></script>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div>{{name}}</div>
+    <div>{{arr[1]}}</div>
+  </div>
   <script>
     var app=new Vue({
       el:'#root',
       data:{
+        name:'a',
         arr:[{name:1},2,3]
       }
     })
+    function cacheFn(fn){
+      let cache=Object.create(null)
+      return function(str){
+        let hit=cache[str]
+        return hit || (cache[str]=fn(str))
+      }
+    }
+    const hyphenateRE = /\B([A-Z])/g
+    let cacheFns=cacheFn(function(str){
+      return str.replace(hyphenateRE, '-$1').toLowerCase()
+    })
+    console.dir(cacheFns('asd-SDAS'))
+    console.dir(cacheFns('asd-vvvv-asdasd'))
   </script>
 </body>
 </html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    .root{
+      position: relative
+    }
+    .img{
+      position: absolute;
+    }
+    .img img{
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="root">
+    <div class="img"><img src="./p1.jpg" alt=""></div>
+    <div class="img"><img src="./p2.png" alt=""></div>
+    <div class="img"><img src="./p3.png" alt=""></div>
+    <div class="img"><img src="./p5.jpg" alt=""></div>
+    <div class="img"><img src="./p6.jpg" alt=""></div>
+    <div class="img"><img src="./p7.jpg" alt=""></div>
+    <div class="img"><img src="./p8.jpg" alt=""></div>
+    <div class="img"><img src="./p9.png" alt=""></div>
+    <div class="img"><img src="./p10.jpg" alt=""></div>
+    <div class="img"><img src="./p11.jpg" alt=""></div>
+    <div class="img"><img src="./p12.png" alt=""></div>
+    <div class="img"><img src="./p13.jpg" alt=""></div>
+    <div class="img"><img src="./p14.jpg" alt=""></div>
+  </div>
+  <script>
+    /**
+     * 1. 图片定位：
+     *      left:最小高度图片的索引*宽度
+     *      top：最小高度图片的高度
+     * 2. 数组存储每一次遍历行距离上面的距离
+     * 3. 列数：图片宽度/屏幕宽度
+    */
+    function waterFall(opt){
+      // 屏幕寬度-滾動條寬度=頁面真實寬度
+      let pageWidth=getClient().width - getScrollWidth()
+      let columns=opt.columns||3 // 列數，默認三
+      let marginRight=opt.marginRight||10 // 右間距，默認10
+      let marginTop=opt.marginTop||10 // 下間距，默認10
+      let itemWidth = parseInt(pageWidth/columns - marginRight); //得到item的宽度
+      let item=Array.from(opt.item)
+      item.map(i=>{ //设置到item的宽度
+        i.style.width=itemWidth+'px'
+      })
+      let arr=[] // 記錄高度
+      item.map((i,idx)=>{
+        let height=i.getElementsByTagName('img')[0].getBoundingClientRect().height
+        if (idx < columns) {
+            // 2 第一行按序布局
+            i.style.top=0+'px'
+            i.style.left=((itemWidth) * idx+marginRight*idx)+'px'
+            //将行高push到数组
+            arr.push(height);
+        } else {
+            // 其他行
+            // 3 找到数组中最小高度  和 它的索引
+            var minHeight = arr[0];
+            var index = 0;
+            for (var j = 0; j < arr.length; j++) {
+                if (minHeight > arr[j]) {
+                    minHeight = arr[j];
+                    index = j;
+                }
+            }
+            // 4 设置下一行的第一个盒子位置
+            // top值就是最小列的高度
+            i.style.top=arr[index]+marginTop+'px'
+            i.style.left=(itemWidth+marginRight)*(index%columns)+'px'
+            // 5 修改最小列的高度
+            // 最小列的高度 = 当前自己的高度 + 拼接过来的高度
+            arr[index] = arr[index] + height+marginTop;//设置30的距离
+        }
+      })
+    }
+    function getClient(){
+      return {
+        width: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
+        height: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+      }
+    }
+    function getScrollWidth() {
+      var noScroll, scroll, oDiv = document.createElement("DIV");
+      oDiv.style.cssText = "position:absolute; top:-1000px; width:100px; height:100px; overflow:hidden;";
+      noScroll = document.body.appendChild(oDiv).clientWidth;
+      oDiv.style.overflowY = "scroll";
+      scroll = oDiv.clientWidth;
+      document.body.removeChild(oDiv);
+      return noScroll-scroll;
+    }
+    window.onload=function(){
+      waterFall({
+        columns:4,
+        item:document.getElementsByClassName('root')[0].getElementsByClassName('img')
+      })
+    }
+
+    window.onresize=function(){
+      waterFall({
+        columns:4,
+        item:document.getElementsByClassName('root')[0].getElementsByClassName('img')
+      })
+    }
+  </script>
+</body>
+
+</html>

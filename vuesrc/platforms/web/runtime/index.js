@@ -1,4 +1,6 @@
 /* @flow */
+// 配置了__patch__
+// 定义原始的$mount方法
 
 import Vue from 'core/index'
 import config from 'core/config'
@@ -31,9 +33,11 @@ extend(Vue.options.directives, platformDirectives)
 extend(Vue.options.components, platformComponents)
 
 // install platform patch function
+// 使用虚拟DOM更新,真正的DOM的核心算法
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
 // public mount method
+// 原始的$mount方法,调用挂载组件的方法
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean

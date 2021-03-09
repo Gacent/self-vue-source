@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    .test{
+      width: 100px;
+      height: 100px;
+      background: #ccc;
+      box-sizing: border-box;
+      border: 1px solid #000;
+      position: absolute;
+    }
+    .weizhi{
+      width: 0px;
+      height: 0px;
+      background: #ccc;
+      box-sizing: border-box;
+      border-radius:50% ;
+      position: absolute;
+      right: 200px;
+      top: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div class="test"></div>
+  <div class="weizhi"></div>
+
+  <script>
+    /* 回弹动画
+    1.获取点击的元素
+    2.获取点击元素的距离左边和顶部的位置
+    3.根据需要回弹的坐标位置做过渡动画
+    */
+    window.onload=function(){
+      animateToTarget({
+        current:document.querySelector('.test'),
+        target:document.querySelector('.weizhi'),
+        time:1,
+        currentTransition:{
+          opacity:0,
+          width:'20px',
+          height:'20px',
+          borderRadius:'50%'
+        },
+        targetTransition:{
+          width:'20px',
+          height:'20px'
+        }
+      })
+
+    }
+    // 向目标元素运动
+    function animateToTarget(opt){
+      let current=opt.current;
+      let target=opt.target;
+      let targetTransition=opt.targetTransition
+      let currentTransition=opt.currentTransition
+      let time=opt.time
+
+
+      let weizhiLocation=target.getBoundingClientRect()
+      let weizhiLocationLeft=weizhiLocation.left
+      let weizhiLocationTop=weizhiLocation.top
+      target.style.width="0px"
+      target.style.height="0px"
+      current.style.transition=`all ${time}s`
+      target.style.transition=`all ${time}s`
+
+      current.addEventListener('click',function(e){
+        let currentLeft=e.clientX
+        let currentTop=e.clientY
+        for(let key in currentTransition){
+          this.style[key]=currentTransition[key]
+        }
+        this.style.transform=`translate(${weizhiLocationLeft}px,${weizhiLocationTop}px) scale(0.5) rotate(180deg)`
+        for(let key in targetTransition){
+          target.style[key]=targetTransition[key]
+        }
+      })
+    }
+    
+  </script>
+</body>
+</html>

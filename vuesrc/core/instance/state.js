@@ -144,7 +144,7 @@ function initData (vm: Component) {
         vm
       )
     } else if (!isReserved(key)) {
-      proxy(vm, `_data`, key)
+      proxy(vm, `_data`, key) // 映射到vue实例上,不需要app._data.xxx访问
     }
   }
   // observe data
@@ -153,13 +153,13 @@ function initData (vm: Component) {
 
 export function getData (data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
-  pushTarget()
+  pushTarget()  // 此时是vue的初始化,还没有进行模板渲染,所以不需要进行依赖收集,pushTarget为空,就会将watcher设置为undefined,依赖收集的时候会判断Dep.target存在的时候才收集
   try {
     return data.call(vm, vm)
   } catch (e) {
     handleError(e, vm, `data()`)
     return {}
-  } finally {
+  } finally { 
     popTarget()
   }
 }

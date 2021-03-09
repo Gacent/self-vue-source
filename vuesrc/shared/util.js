@@ -337,7 +337,7 @@ export function looseIndexOf (arr: Array<mixed>, val: mixed): number {
   }
   return -1
 }
-
+  
 /**
  * Ensure a function is called only once.
  * 一个事件或函数只调用一次

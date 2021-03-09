@@ -10,6 +10,7 @@ import { initLifecycle, callHook } from './lifecycle'
 import { initProvide, initInjections } from './inject'
 import { extend, mergeOptions, formatComponentName } from '../util/index'
 
+// 每个类型的实例都会有唯一标识
 let uid = 0
 
 export function initMixin (Vue: Class<Component>) {
@@ -17,7 +18,7 @@ export function initMixin (Vue: Class<Component>) {
     const vm: Component = this
     // a uid
     vm._uid = uid++
-
+    // 测试性能用的
     let startTag, endTag
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -30,12 +31,13 @@ export function initMixin (Vue: Class<Component>) {
     vm._isVue = true
     // merge options
     if (options && options._isComponent) {
+      // 是否是组件,是则执行相关的方法
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
-      vm.$options = mergeOptions(
+      vm.$options = mergeOptions( // 合并,为options增加属性
         resolveConstructorOptions(vm.constructor),
         options || {},
         vm
@@ -49,14 +51,14 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    initLifecycle(vm)
-    initEvents(vm)
-    initRender(vm)
-    callHook(vm, 'beforeCreate')
-    initInjections(vm) // resolve injections before data/props
-    initState(vm)
+    initLifecycle(vm)   // 初始化生命周期的一些状态变量
+    initEvents(vm)    // 初始化事件的 容器
+    initRender(vm)    // 初始化创建元素的方法
+    callHook(vm, 'beforeCreate')  // 调用方法
+    initInjections(vm) // resolve injections before data/props  // 初始化注入器
+    initState(vm) // 初始化状态数据,包含data,props等
     initProvide(vm) // resolve provide after data/props
-    callHook(vm, 'created')
+    callHook(vm, 'created') 
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -67,6 +69,9 @@ export function initMixin (Vue: Class<Component>) {
 
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
+      // 先调用扩展的$mount,生成render
+      // 再调用原来的$mount,获得元素,在调用mountComponent方法
+      // 两个方法都定义再plaftform/web
     }
   }
 }

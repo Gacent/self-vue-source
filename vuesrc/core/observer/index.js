@@ -43,16 +43,19 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
-    def(value, '__ob__', this)
+    def(value, '__ob__', this)  // value.__ob__ = this
+
+    // 响应式化的逻辑
     if (Array.isArray(value)) {
-      if (hasProto) {
+      // 
+      if (hasProto) { // 判断兼容性，浏览器是否兼容__prop__属性
         protoAugment(value, arrayMethods)
       } else {
         copyAugment(value, arrayMethods, arrayKeys)
       }
-      this.observeArray(value)
+      this.observeArray(value)  // 遍历数组的元素，递归observer
     } else {
-      this.walk(value)
+      this.walk(value) // 遍历对象的属性，递归observer
     }
   }
 
@@ -83,16 +86,18 @@ export class Observer {
 /**
  * Augment a target Object or Array by intercepting
  * the prototype chain using __proto__
+ * 
  */
 function protoAugment (target, src: Object) {
   /* eslint-disable no-proto */
-  target.__proto__ = src
+  target.__proto__ = src  // 完成数组原型链的修改，变为我们的arrayMethods改写过的数组的方法的原型
   /* eslint-enable no-proto */
 }
 
 /**
  * Augment a target Object or Array by defining
  * hidden properties.
+ * 如果浏览器不支持就将这些方法直接混入当前数组中，属性访问原则
  */
 /* istanbul ignore next */
 function copyAugment (target: Object, src: Object, keys: Array<string>) {
@@ -106,6 +111,12 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * Attempt to create an observer instance for a value,
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
+ * 将传入的数据value变成响应式
+ * 
+ * 算法描述：
+ * - 先看对象是否含有__ob__，并且是Observer的实例（vue中响应式对象的标记）
+ * - 有，忽略
+ * - 没有，调用new Observer(value) ，进行响应式处理
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
@@ -140,7 +151,7 @@ export function defineReactive (
   shallow?: boolean
 ) {
   const dep = new Dep()
-
+  // 获得对象的属性描述，就是定义
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
@@ -160,7 +171,8 @@ export function defineReactive (
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
-        dep.depend()
+        dep.depend()  // 关联的当前属性
+        // 收集子属性
         if (childOb) {
           childOb.dep.depend()
           if (Array.isArray(value)) {
@@ -173,6 +185,7 @@ export function defineReactive (
     set: function reactiveSetter (newVal) {
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
+      // 如果数据没有发生变化，就不会派发更新
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
       }

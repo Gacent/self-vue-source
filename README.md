@@ -219,3 +219,19 @@ get方法
 4. server:服务端,主要是vue用在服务端的处理代码
 5. sfc:单文件组件,
 6. shared:公共工具,方法
+
+## 主要内容
+1. vue源码
+  1. Observer
+  2. Watcher 和computed
+  3. 简单说明一下patch
+Observer 文件夹个个作用
+- array.js创建含有重写 数组方法的数组，让所有的响应式数据数组继承自 该数组
+- dep.js Dep类
+- index.js Observer类，observe的工厂函数
+- schedule.js vue中任务调度的工具，watcher执行的核心
+- traverse.js 递归遍历响应式数据，目的是触发依赖收集
+- watcher.js watcher类
+
+2. 重点：如何进行浏览器的能力检查（observer里 的hasPro）
+`export const hasProp = '__proto__' in {}`

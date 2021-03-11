@@ -13,7 +13,7 @@ let uid = 0
 export default class Dep {
   static target: ?Watcher;
   id: number;
-  subs: Array<Watcher>;
+  subs: Array<Watcher>; // 存储watcher
 
   constructor () {
     this.id = uid++
@@ -33,7 +33,8 @@ export default class Dep {
       Dep.target.addDep(this)
     }
   }
-
+  // 每一个属性都会有一个dep实例，
+  // 这个dep实例会记录下 参与计算或渲染的watcher
   notify () {
     // stabilize the subscriber list first
     const subs = this.subs.slice()

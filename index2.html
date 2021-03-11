@@ -24,12 +24,22 @@
       right: 200px;
       top: 200px;
     }
+    #trangle{
+      position: absolute;
+      top: 200px;
+      width: 0;
+      height: 0;
+      background: transparent;
+      border-left:10px solid transparent;
+      border-right:10px solid transparent;
+      border-bottom: 30px solid red;
+    }
   </style>
 </head>
 <body>
   <div class="test"></div>
   <div class="weizhi"></div>
-
+  <div id="trangle"></div>
   <script>
     /* 回弹动画
     1.获取点击的元素
@@ -83,7 +93,6 @@
         }
       })
     }
-    
   </script>
 </body>
 </html>

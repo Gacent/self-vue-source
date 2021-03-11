@@ -13,17 +13,18 @@ import {
 } from '../util/index'
 
 export const MAX_UPDATE_COUNT = 100
-
+// watcher队列，即事件队列
 const queue: Array<Watcher> = []
 const activatedChildren: Array<Component> = []
 let has: { [key: number]: ?true } = {}
 let circular: { [key: number]: number } = {}
-let waiting = false
-let flushing = false
+let waiting = false // 异步触发还没开始，类比setTimeout还没执行
+let flushing = false  // 开始渲染，清空队列，执行队列中的watcher的run方法
 let index = 0
 
 /**
  * Reset the scheduler's state.
+ * 清空队列
  */
 function resetSchedulerState () {
   index = queue.length = activatedChildren.length = 0

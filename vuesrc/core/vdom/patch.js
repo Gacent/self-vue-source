@@ -696,7 +696,12 @@ export function createPatchFunction (backend) {
       return node.nodeType === (vnode.isComment ? 8 : 3)
     }
   }
-
+  // 二次提交的逻辑
+  // 每次数据更新的时候=》新的 虚拟DOM =》 diff旧的虚拟DOM =》更新旧的虚拟DOM=》同步真DOM
+  // 算法思路：旧DOM集合先去对比新DOM集合，有则不动，没有则删；再将新DOM集合反过来对比旧DOM集合，有则忽略，没有则加进去
+  // 分而治之，每一个虚拟DOM都和页面DOM一一对应
+  // 只需要将vnode和DOMNOde建立一个更新的关系
+  // 递归触发每一个虚拟DOM的update,来更新对应的真正的DOM数据
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)

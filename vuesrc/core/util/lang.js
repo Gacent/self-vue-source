@@ -17,6 +17,9 @@ export function isReserved (str: string): boolean {
 
 /**
  * Define a property.
+ * 抽取了enumerable参数作为可选参数
+ * 
+ * vue里存在大量循环引用，就是如果递归的时候就会出现死递归，所以要用enumerable作为是否可以被循环遍历出来的条件
  */
 export function def (obj: Object, key: string, val: any, enumerable?: boolean) {
   Object.defineProperty(obj, key, {

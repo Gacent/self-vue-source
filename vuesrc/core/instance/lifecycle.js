@@ -187,6 +187,8 @@ export function mountComponent (
     }
   } else {
     updateComponent = () => {
+      // _render生成虚拟DOM
+      // _update内部调用patch方法
       vm._update(vm._render(), hydrating)
     }
   }

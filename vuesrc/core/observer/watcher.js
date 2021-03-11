@@ -25,22 +25,28 @@ let uid = 0
  */
 export default class Watcher {
   vm: Component;
-  expression: string;
-  cb: Function;
+  expression: string; // 关联表达式或渲染方法体
+  cb: Function;   // 在定义vue构造函数的时候，传入watch
   id: number;
   deep: boolean;
   user: boolean;
-  lazy: boolean;
+  lazy: boolean;  // 针对计算属性和watch来控制不要让watcher立即执行任务
   sync: boolean;
   dirty: boolean;
   active: boolean;
+  // 在vue中有使用二次提交的概念
+  // 每次在数据在渲染或计算的时候，会访问响应式的数据，会进行依赖收集，就将关联的watcher与dep进行关联
+  // 在数据发生变化的时候，通过dep找到对应的watcher，一次调用watcher，执行完成后会清空watcher 
+  // 先在newdeps上操作，操作完之后归档到deps，depids是保证不会收集到重复的watcher，避免渲染消耗
   deps: Array<Dep>;
   newDeps: Array<Dep>;
+
   depIds: SimpleSet;
   newDepIds: SimpleSet;
-  before: ?Function;
-  getter: Function;
-  value: any;
+
+  before: ?Function;  // watcher触发之前的
+  getter: Function; // 渲染函数（模板或组件的渲染）或计算函数（watch）
+  value: any; // 如果是渲染函数，value就没值，如果是计算属性，就会有一个值
 
   constructor (
     vm: Component,
@@ -163,11 +169,11 @@ export default class Watcher {
    */
   update () {
     /* istanbul ignore else */
-    if (this.lazy) {
+    if (this.lazy) {  // 主要针对计算属性，一般用于求值计算
       this.dirty = true
-    } else if (this.sync) {
+    } else if (this.sync) { // 同步，主要用于ssr
       this.run()
-    } else {
+    } else {  // 一般浏览器中的异步运行，本质上是异步执行run()；类比setTimeout
       queueWatcher(this)
     }
   }
